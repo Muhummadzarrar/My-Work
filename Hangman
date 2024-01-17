@@ -1,0 +1,90 @@
+sing System;
+using System.Collections.Generic;
+using System.Linq;
+
+class HangmanGame
+{
+    static void Main()
+    {
+        Dictionary<string, string[]> wordCategories = new Dictionary<string, string[]>
+        {
+            { "countries", new string[] { "france", "germany", "japan", "pakistan", "brazil", "canada", "australia" } },
+            { "food", new string[] { "pizza", "hamburger", "sushi", "spaghetti", "chocolate", "icecream", "pancake" } },
+            { "art", new string[] { "painting", "sculpture", "drawing", "music", "poetry", "theater", "dance" } },
+            { "cars", new string[] { "ford", "chevrolet", "honda", "nissan", "toyota", "volkswagen", "bmw" } },
+            { "tech", new string[] { "computer", "smartphone", "software", "internet", "robotics", "cybersecurity", "gadgets" } },
+            { "companies", new string[] { "apple", "google", "microsoft", "amazon", "facebook", "razer", "netflix" } }
+        };
+
+        Console.WriteLine("Welcome to the Hangman Game!");
+        Console.WriteLine("Choose a category: countries, food, art, cars, tech, companies");
+        string selectedCategory = Console.ReadLine().ToLower();
+
+        if (wordCategories.ContainsKey(selectedCategory))
+        {
+            Random random = new Random();
+            string wordToGuess = wordCategories[selectedCategory][random.Next(0, wordCategories[selectedCategory].Length)];
+            int wordLength = wordToGuess.Length;
+
+            char[] guessedWord = new char[wordLength];
+            for (int i = 0; i < guessedWord.Length; i++)
+            {
+                guessedWord[i] = '_';
+            }
+
+            int maxAttempts = 6;
+            int attempts = 0;
+            bool isWordGuessed = false;
+
+            Console.WriteLine($"I've selected a random {selectedCategory} for you to guess.");
+            Console.WriteLine($"Word to guess has {wordLength} letters.");
+            Console.WriteLine($"You have {maxAttempts} attempts to guess the word.");
+
+            while (attempts < maxAttempts && !isWordGuessed)
+            {
+                Console.WriteLine($"Word: {new string(guessedWord)}");
+                Console.Write("Enter a letter: ");
+                char guess = Console.ReadKey().KeyChar;
+                Console.WriteLine();
+
+                bool letterGuessed = false;
+
+                for (int i = 0; i < wordToGuess.Length; i++)
+                {
+                    if (wordToGuess[i] == guess)
+                    {
+                        guessedWord[i] = guess;
+                        letterGuessed = true;
+                    }
+                }
+
+                if (!letterGuessed)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Wrong guess!");
+                    Console.ResetColor();
+                    Console.Beep(500, 2000); // Play an alert sound on wrong guess
+                    attempts++;
+                }
+
+                if (new string(guessedWord) == wordToGuess)
+                {
+                    isWordGuessed = true;
+                }
+            }
+
+            if (isWordGuessed)
+            {
+                Console.WriteLine($"Congratulations! You guessed the {selectedCategory} '{wordToGuess}' in {attempts + 1} attempts.");
+            }
+            else
+            {
+                Console.WriteLine($"You've run out of attempts. The {selectedCategory} was: {wordToGuess}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Invalid category. Please choose from the available categories.");
+        }
+    }
+}
