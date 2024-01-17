@@ -1,0 +1,90 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Xml;
+using HtmlAgilityPack;
+
+class WebCrawler
+{
+    // Global data structures
+    static HashSet<string> crawledURLs = new HashSet<string>();
+    static Queue<string> pendingURLs = new Queue<string>();
+    const int maxDepth = 2; // Maximum depth to crawl
+
+    static void Main()
+    {
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+        // Start crawling from a seed URL
+        pendingURLs.Enqueue("https://youtube.com");
+
+        while (pendingURLs.Count > 0)
+        {
+            string urlToCrawl = pendingURLs.Dequeue();
+            crawlURL(urlToCrawl, 0);
+        }
+    }
+
+    // Function to crawl a URL
+    static void crawlURL(string url, int depth)
+    {
+        if (depth > maxDepth)
+        {
+            return;
+        }
+
+        if (!crawledURLs.Contains(url))
+        {
+            try
+            {
+                var webClient = new WebClient();
+                string pageData = webClient.DownloadString(url);
+
+                // Process the page data (e.g., extract links, save content, etc.)
+                Console.WriteLine("Crawled: " + url);
+
+                // Load HTML content using HtmlAgilityPack
+                var htmlDocument = new HtmlDocument();
+                htmlDocument.LoadHtml(pageData);
+
+                parseLinks(htmlDocument.DocumentNode, url, depth + 1);
+
+                // For this example, let's assume we're extracting links from HTML (using HtmlAgilityPack)
+                // Here, we're adding example links to simulate new URLs to crawl
+                for (int i = 1; i <= 5; ++i)
+                {
+                    pendingURLs.Enqueue(url + "/page" + i);
+                }
+
+                crawledURLs.Add(url);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Error crawling " + url + ": " + ex.Message);
+            }
+        }
+    }
+
+    // Function to parse links from HTML content
+    static void parseLinks(HtmlNode node, string baseUrl, int depth)
+    {
+        foreach (var anchorNode in node.Descendants("a"))
+        {
+            var hrefAttribute = anchorNode.Attributes["href"];
+            if (hrefAttribute != null)
+            {
+                string link = hrefAttribute.Value;
+
+                // Handle relative and absolute URLs
+                if (!Uri.IsWellFormedUriString(link, UriKind.Absolute))
+                {
+                    link = new Uri(new Uri(baseUrl), link).AbsoluteUri; // Make it absolute
+                }
+
+                crawlURL(link, depth);
+            }
+        }
+    }
+}
